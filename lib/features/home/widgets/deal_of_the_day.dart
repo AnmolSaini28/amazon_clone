@@ -63,7 +63,7 @@ class _DealOfDayState extends State<DealOfDay> {
                       padding: const EdgeInsets.only(left: 15),
                       alignment: Alignment.topLeft,
                       child: const Text(
-                        '\$100',
+                        '\$ 499',
                         style: TextStyle(fontSize: 18),
                       ),
                     ),
@@ -72,7 +72,7 @@ class _DealOfDayState extends State<DealOfDay> {
                       padding:
                           const EdgeInsets.only(left: 15, top: 5, right: 40),
                       child: const Text(
-                        'Anmol',
+                        'Microsoft surface',
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),

@@ -218,6 +218,7 @@ class _ProductDetailScreenState extends State<ProductDetailsScreen> {
             Padding(
               padding: const EdgeInsets.all(10),
               child: CustomButton(
+                color: GlobalVariables.secondaryColor,
                 text: 'Buy Now',
                 onTap: () {},
               ),

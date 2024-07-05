@@ -10,6 +10,7 @@ import 'package:amazon_clone/models/order.dart';
 import 'package:amazon_clone/models/product.dart';
 import 'package:amazon_clone/provider/user_provider.dart';
 import 'package:cloudinary_public/cloudinary_public.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:http/http.dart' as http;
@@ -27,13 +28,16 @@ class AdminServices {
   }) async {
     final userProvider = Provider.of<UserProvider>(context, listen: false);
 
+    final dio = Dio();
+
     try {
-      final cloudinary = CloudinaryPublic('dc7kvqdcb', 'kmw3sv58');
+      final cloudinary = CloudinaryPublic('dc7kvqdcb', 'if6hrcei');
       List<String> imageUrls = [];
 
       for (int i = 0; i < images.length; i++) {
+        String folderName = name.trim();
         CloudinaryResponse res = await cloudinary.uploadFile(
-          CloudinaryFile.fromFile(images[i].path, folder: name),
+          CloudinaryFile.fromFile(images[i].path, folder: folderName),
         );
         imageUrls.add(res.secureUrl);
       }
@@ -47,25 +51,38 @@ class AdminServices {
         price: price,
       );
 
-      http.Response res = await http.post(
-        Uri.parse('$uri/admin/add-product'),
-        headers: {
-          'Content-Type': 'application/json; charset=UTF-8',
-          'x-auth-token': userProvider.user.token,
-        },
-        body: product.toJson(),
+      final response = await dio.post(
+        '$uri/admin/add-product',
+        data: product.toJson(),
+        options: Options(
+          headers: {
+            'Content-Type': 'application/json; charset=UTF-8',
+            'x-auth-token': userProvider.user.token,
+          },
+        ),
       );
 
-      httpErrorHandle(
-        response: res,
-        context: context,
-        onSuccess: () {
-          showSnackBar(context, 'Product Added Successfully!');
-          Navigator.pop(context);
-        },
-      );
+      if (response.statusCode == 200) {
+        showSnackBar(context, 'Product added successfully!');
+        Navigator.pop(context);
+      } else {
+        // Handle other status codes or errors
+        showSnackBar(context,
+            'Failes to add product. Status code: ${response.statusCode}');
+      }
+    } on DioException catch (e) {
+      if (e.response != null) {
+        if (e.response!.statusCode == 400) {
+          showSnackBar(context, 'Bad request: ${e.response!.data}');
+        } else {
+          showSnackBar(context,
+              'Fails to sell product. Status code: ${e.response!.statusCode}');
+        }
+      } else {
+        showSnackBar(context, 'Network error: ${e.message}');
+      }
     } catch (e) {
-      showSnackBar(context, e.toString());
+      showSnackBar(context, 'Error selling product: $e');
     }
   }
 

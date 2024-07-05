@@ -28,6 +28,12 @@ class _AddressScreenState extends State<AddressScreen> {
   final TextEditingController cityController = TextEditingController();
   final _addressFormKey = GlobalKey<FormState>();
 
+  final Future<PaymentConfiguration> _googlePayConfigFuture =
+      PaymentConfiguration.fromAsset('gpay.json');
+
+  final Future<PaymentConfiguration> _applePayConfigFuture =
+      PaymentConfiguration.fromAsset('applepay.json');
+
   String addressToBeUsed = "";
   List<PaymentItem> paymentItems = [];
   final AddressServices addressServices = AddressServices();
@@ -53,7 +59,22 @@ class _AddressScreenState extends State<AddressScreen> {
     cityController.dispose();
   }
 
-  void onGooglePayresult(res) {
+  void onApplePayResult(res) {
+    if (Provider.of<UserProvider>(context, listen: false)
+        .user
+        .address
+        .isEmpty) {
+      addressServices.saveUserAddress(
+          context: context, address: addressToBeUsed);
+    }
+    addressServices.placeOrder(
+      context: context,
+      address: addressToBeUsed,
+      totalSum: double.parse(widget.totalAmount),
+    );
+  }
+
+  void onGooglePayResult(res) {
     if (Provider.of<UserProvider>(context, listen: false)
         .user
         .address
@@ -166,19 +187,39 @@ class _AddressScreenState extends State<AddressScreen> {
                   ],
                 ),
               ),
-              GooglePayButton(
-                onPressed: () => payPressed(address),
-                paymentConfiguration:
-                    PaymentConfiguration.fromJsonString('gpay.json'),
-                onPaymentResult: onGooglePayresult,
-                paymentItems: paymentItems,
-                height: 50,
-                theme: GooglePayButtonTheme.dark,
-                type: GooglePayButtonType.buy,
-                margin: const EdgeInsets.only(top: 15),
-                loadingIndicator: const Center(
-                  child: CircularProgressIndicator(),
-                ),
+              const SizedBox(height: 20),
+              FutureBuilder<PaymentConfiguration>(
+                  future: _applePayConfigFuture,
+                  builder: (context, snapshot) => snapshot.hasData
+                      ? ApplePayButton(
+                          width: double.infinity,
+                          style: ApplePayButtonStyle.whiteOutline,
+                          type: ApplePayButtonType.buy,
+                          paymentConfiguration: snapshot.data!,
+                          onPaymentResult: onApplePayResult,
+                          paymentItems: paymentItems,
+                          margin: const EdgeInsets.only(top: 15),
+                          height: 50,
+                          onPressed: () => payPressed(address),
+                        )
+                      : const SizedBox.shrink()),
+              FutureBuilder<PaymentConfiguration>(
+                future: _googlePayConfigFuture,
+                builder: (context, snapshot) => snapshot.hasData
+                    ? GooglePayButton(
+                        onPressed: () => payPressed(address),
+                        width: double.infinity,
+                        paymentConfiguration: snapshot.data!,
+                        paymentItems: paymentItems,
+                        type: GooglePayButtonType.buy,
+                        margin: const EdgeInsets.only(top: 15.0),
+                        height: 50,
+                        onPaymentResult: onGooglePayResult,
+                        loadingIndicator: const Center(
+                          child: CircularProgressIndicator(),
+                        ),
+                      )
+                    : const SizedBox.shrink(),
               ),
             ],
           ),

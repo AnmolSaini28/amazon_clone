@@ -113,6 +113,7 @@ class _CartScreenState extends State<CartScreen> {
         ),
       ),
       body: SingleChildScrollView(
+        scrollDirection: Axis.vertical,
         child: Column(
           children: [
             const AddressBox(),
@@ -132,6 +133,7 @@ class _CartScreenState extends State<CartScreen> {
             ),
             const SizedBox(height: 5),
             ListView.builder(
+              scrollDirection: Axis.vertical,
               itemCount: user.cart.length,
               shrinkWrap: true,
               itemBuilder: (context, index) {
